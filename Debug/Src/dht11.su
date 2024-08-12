@@ -1,0 +1,7 @@
+../Src/dht11.c:15:6:DHT11_Init	16	static
+../Src/dht11.c:22:6:SingleBusMode	32	static
+../Src/dht11.c:42:6:uDelay	24	static
+../Src/dht11.c:54:6:DHT11_StartCommunication	8	static
+../Src/dht11.c:64:6:DHT11_Response	8	static
+../Src/dht11.c:79:6:DHT11_ReadRawData	24	static
+../Src/dht11.c:127:6:DHT11_GetData	32	static
