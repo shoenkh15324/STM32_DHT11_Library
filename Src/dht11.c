@@ -57,22 +57,8 @@ void DHT11_StartCommunication()
   HAL_GPIO_WritePin(DHT11_Port, DHT11_Pin, GPIO_PIN_RESET);
   HAL_Delay(20);
   HAL_GPIO_WritePin(DHT11_Port, DHT11_Pin, GPIO_PIN_SET);
+  uDelay(40);
   SingleBusMode(INPUT_MODE);
-}
-
-// Check DHT11 Response
-void DHT11_Response()
-{
-  uDelay(40);
-  // DHT sends out response signal. (pin low)
-  while(1 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin));
-
-  uDelay(40);
-  // DHT pulls up. (pin high)
-  while(0 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin));
-
-  // Start data transmission. (pin low)
-  while(1 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin));
 }
 
 // Read 5 bytes Raw Data
@@ -81,56 +67,57 @@ void DHT11_ReadRawData(uint8_t *data)
   uint32_t rawBits = 0;
   uint8_t checksumBits = 0;
 
-  uDelay(50);
+  uDelay(40);
+  while(0 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin));
+  while(1 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin));
 
-  // Get raw temp, humid data.
-  for(int8_t i=31; i>=0; i--)
+  // Read temp & humid data.
+  for(uint8_t i = 31; i >= 0; i--)
   {
-    while(0 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin)); // pin high
-    uDelay(40);
+    // wait for begin of bit
+    while(0 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin));
 
-    if(0 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin)) // if pin is low
+    uDelay(40);
+    if(1 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin))
     {
-      rawBits &= (1UL << i); // write 0
+      rawBits |= (1UL << i);
     }
-    else
-    {
-      rawBits |= (1UL << i); // write 1
-    }
+
+    // wait for end of bit
+    while(1 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin));
   }
 
-  // Get raw checksum data.
-  for(int8_t i=7; i>=0; i--)
+  // Read checksum data.
+  for(uint8_t i = 31; i >= 0; i--)
   {
-    while(0 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin)); // pin high
-    uDelay(40);
+    // wait for begin of bit
+    while(0 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin));
 
-    if(0 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin))
+    uDelay(40);
+    if(1 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin))
     {
-      checksumBits &= (1UL << i); // write 0
+      checksumBits |= (1UL << i);
     }
-    else
-    {
-      checksumBits |= (1UL << i); // write 1
-    }
+
+    // wait for end of bit
+    while(1 == HAL_GPIO_ReadPin(DHT11_Port, DHT11_Pin));
   }
 
-  // Copy raw data to array of bytes
-  data[0] = (rawBits>>24) & 0xFF;
-  data[1] = (rawBits>>16) & 0xFF;
-  data[2] = (rawBits>>8) & 0xFF;
-  data[3] = (rawBits>>0) & 0xFF;
+  // copy rawBits to dataArray
+  data[0] = (rawBits >> 24) & 0xFF;
+  data[1] = (rawBits >> 16) & 0xFF;
+  data[2] = (rawBits >> 8) & 0xFF;
+  data[3] = (rawBits >> 0) & 0xFF;
   data[4] = (checksumBits) & 0xFF;
 }
 
 //Get Temp & Humid Data
 bool DHT11_GetData(float* temp, float* humid)
 {
-  uint8_t dataArray[6], myChecksum;
+  uint8_t dataArray[5], myChecksum;
   uint16_t temp16, humid16;
 
   DHT11_StartCommunication();
-  DHT11_Response();
   DHT11_ReadRawData(dataArray);
   myChecksum = 0;
 

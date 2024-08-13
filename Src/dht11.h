@@ -34,6 +34,7 @@
 #define OUTPUT_MODE 0
 #define INPUT_MODE 1
 
+
 // DHT11 Init
 void DHT11_Init(GPIO_TypeDef* DataPort, uint16_t DataPin);
 
@@ -46,11 +47,8 @@ void uDelay(__IO uint32_t nCount);
 // Begin Communication
 void DHT11_StartCommunication();
 
-// Check DHT11 Response
-void DHT11_Response();
-
-// Read 5 bytes
-void DHT22_ReadRawData(uint8_t *data);
+// Read 5 bytes RawData and Check Checksum.
+void DHT11_ReadRawData(uint8_t *data);
 
 // Get Temp & Humid Data
 bool DHT11_GetData(float* temp, float* humid);
